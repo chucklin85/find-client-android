@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -62,6 +63,7 @@ public class LearnFragment extends Fragment {
 
     private ArrayList<WifiObject> arrayList;
     private WifiArrayAdapter wifiArrayAdapter;
+    private WifiManager mWifiManager;
 
     /**
      * Use this factory method to create a new instance of
@@ -136,6 +138,7 @@ public class LearnFragment extends Fragment {
             wifiArrayAdapter.add(wifi);
         }
 
+        mWifiManager = (WifiManager) getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
     }
 
     @Override
@@ -167,6 +170,8 @@ public class LearnFragment extends Fragment {
                         insertIntoList(wifi);
                         internalDataBase.addEvent(new Event(strLocationName, strGroup, strUsername));
                         handler.post(runnableCode);
+                        //handler.postDelayed(runnableCode, learnIntervalVal * 1000);
+                        mWifiManager.startScan();
                     }
                 });
                 builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -223,6 +228,7 @@ public class LearnFragment extends Fragment {
             if (Build.VERSION.SDK_INT >= 23 ) {
                 if(Utils.isWiFiAvailable(mContext) && Utils.hasAnyLocationPermission(mContext)) {
                     Intent intent = new Intent(mContext, WifiIntentReceiver.class);
+                    Log.v("object intent:", intent.toString());
                     intent.putExtra("event", Constants.LEARN_TAG);
                     intent.putExtra("groupName", strGroup);
                     intent.putExtra("userName", strUsername);

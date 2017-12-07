@@ -1,12 +1,14 @@
 package com.find.wifitool.wifi;
 
 import android.app.IntentService;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.content.IntentFilter;
 
 import com.find.wifitool.httpCalls.FindWiFi;
 import com.find.wifitool.httpCalls.FindWiFiImpl;
@@ -63,37 +65,38 @@ public class WifiIntentReceiver extends IntentService {
         locationName = intent.getStringExtra("locationName");
         Long timeStamp = System.currentTimeMillis()/1000;
 
-        // getting all wifi APs and forming data payload
-        try {
-            mWifiData = new WifiData();
-            mWifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
-            JSONArray wifiResultsArray = new JSONArray();
-            List<ScanResult> mResults = mWifiManager.getScanResults();
+        mWifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
 
-            for (ScanResult result : mResults) {
-                JSONObject wifiResults = new JSONObject();
-                if (shouldLog(result)) {
-                    wifiResults.put("mac", result.BSSID);
-                    wifiResults.put("rssi", result.level);
-                    wifiResultsArray.put(wifiResults);
-                }
-            }
-            wifiFingerprint = new JSONObject();
-            wifiFingerprint.put("group", groupName);
-            wifiFingerprint.put("username", userName);
-            wifiFingerprint.put("location", locationName);
-            wifiFingerprint.put("time", timeStamp);
-            wifiFingerprint.put("wifi-fingerprint", wifiResultsArray);
-            Log.d(TAG, String.valueOf(wifiFingerprint));
+         // getting all wifi APs and forming data payload
+         try {
+             mWifiData = new WifiData();
+             JSONArray wifiResultsArray = new JSONArray();
+             List<ScanResult> mResults = mWifiManager.getScanResults();
+             mWifiManager.startScan();
 
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+             for (ScanResult result : mResults) {
+                 JSONObject wifiResults = new JSONObject();
+                 if (shouldLog(result)) {
+                     wifiResults.put("mac", result.BSSID);
+                     wifiResults.put("rssi", result.level);
+                     wifiResultsArray.put(wifiResults);
+                 }
+             }
+             wifiFingerprint = new JSONObject();
+             wifiFingerprint.put("group", groupName);
+             wifiFingerprint.put("username", userName);
+             wifiFingerprint.put("location", locationName);
+             wifiFingerprint.put("time", timeStamp);
+             wifiFingerprint.put("wifi-fingerprint", wifiResultsArray);
+             Log.d(TAG, String.valueOf(wifiFingerprint));
 
-        // Send the packet to server
-        sendPayload(eventName, serverName, wifiFingerprint);
+         } catch (Exception ex) {
+             ex.printStackTrace();
+         }
 
-    }
+         // Send the packet to server
+         sendPayload(eventName, serverName, wifiFingerprint);
+     }
 
     // Function to check to check the route(learn or track) and send data to server
     private void sendPayload(String event, String serverName, JSONObject json) {

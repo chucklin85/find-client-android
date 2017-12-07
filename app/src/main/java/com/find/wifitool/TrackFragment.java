@@ -156,6 +156,7 @@ public class TrackFragment extends Fragment {
             else if (Build.VERSION.SDK_INT < 23) {
                 if(Utils.isWiFiAvailable(mContext)) {
                     Intent intent = new Intent(mContext, WifiIntentReceiver.class);
+                    intent.putExtra("event", Constants.TRACK_TAG);
                     intent.putExtra("groupName", strGroup);
                     intent.putExtra("userName", strUsername);
                     intent.putExtra("serverName", strServer);
